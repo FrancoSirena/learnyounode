@@ -1,13 +1,26 @@
 var http = require('http');
-var map = require('through2-map');
+var url = require('url')
 
 var server = http.createServer(function(req, res) {
-    if (req.method !== 'POST') {
-        return res.end('send me a POST\n')
+    const pUrl = url.parse(req.url, true);
+    if (pUrl.pathname === '/api/parsetime') {
+        var dt = new Date(pUrl.query.iso);
+        var jResp =  {
+            "hour": dt.getHours(),
+            "minute": dt.getMinutes(),
+            "second": dt.getSeconds()
+        };
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify(jResp))
+        
+    } else if(pUrl.pathname === '/api/unixtime') {
+        var dt = new Date(pUrl.query.iso);
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({"unixtime": dt.getTime()}))
+    } else {
+        res.writeHead(404)
+        res.end()
     }
-    req.pipe(map(function(data){
-        return data.toString().toUpperCase();
-    })).pipe(res)
 });
 
 server.listen(process.argv[2])
